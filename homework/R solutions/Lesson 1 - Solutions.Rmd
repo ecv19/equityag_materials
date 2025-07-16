@@ -1,0 +1,96 @@
+---
+title: "Lesson 1 - Solutions"
+author: "Anna Josephson"
+date: "2025-07-16"
+output: html_document
+---
+
+  ## Setup
+  
+```{r load-packages}
+library(arrow)
+library(dplyr)
+library(ggplot2)
+```
+
+```{r load-data}
+# Load the data
+merged_data <- read_parquet("merged_data.parquet", stringsAsFactors = TRUE)
+
+# Create state subsets
+subset_data_az <- subset(merged_data, STATE_ABBR_2010SVI == "AZ")
+subset_data_ca <- subset(merged_data, STATE_ABBR_2010SVI == "CA")
+```
+
+---
+  
+## Activity 1: Explore a Different County
+  
+We'll use **Yuma County** (AZ) as an example.
+
+```{r yuma-stats}
+# Calculate Yuma stats
+print(yuma_mean_2010 <- mean(subset_data_az$upward_mobility_rate_2010[subset_data_az$COUNTY_2010SVI == "Yuma County"]))
+print(yuma_sd_2010 <- sd(subset_data_az$upward_mobility_rate_2010[subset_data_az$COUNTY_2010SVI == "Yuma County"]))
+
+print(yuma_mean_2020 <- mean(subset_data_az$upward_mobility_rate_2020[subset_data_az$COUNTY_2010SVI == "Yuma County"]))
+print(yuma_sd_2020 <- sd(subset_data_az$upward_mobility_rate_2020[subset_data_az$COUNTY_2010SVI == "Yuma County"]))
+
+# Compare to state averages
+print(upward_mean_2010_az <- mean(subset_data_az$upward_mobility_rate_2010))
+print(upward_mean_2020_az <- mean(subset_data_az$upward_mobility_rate_2020))
+```
+
+---
+
+## Activity 2: Boxplots
+
+```{r boxplot-yuma}
+# 2010 boxplot
+ggplot(subset_data_az[subset_data_az$COUNTY_2010SVI == "Yuma County", ],
+       aes(x = "2010", y = upward_mobility_rate_2010)) +
+  geom_boxplot() +
+  labs(title = "Yuma County Mobility 2010", y = "Mobility Rate")
+
+# 2020 boxplot
+ggplot(subset_data_az[subset_data_az$COUNTY_2010SVI == "Yuma County", ],
+       aes(x = "2020", y = upward_mobility_rate_2020)) +
+  geom_boxplot() +
+  labs(title = "Yuma County Mobility 2020", y = "Mobility Rate")
+```
+
+```{r save-boxplots, eval=FALSE}
+ggsave("output/yuma_mobility_2010.pdf")
+ggsave("output/yuma_mobility_2020.pdf")
+```
+
+---
+
+## Activity 3: Filter Challenge
+
+```{r filter-high-mobility}
+# Filter and count
+filtered_high_mobility <- subset_data_az %>%
+  filter(upward_mobility_rate_2010 > 1)
+
+# How many rows?
+nrow(filtered_high_mobility)
+
+# Which counties?
+table(filtered_high_mobility$COUNTY_2010SVI)
+```
+
+---
+
+## Activity 4: Reflect and Extend
+
+### Example Research Question
+> Is upward mobility higher in counties with more educational access?
+
+### Sample Questions to Explore
+- When should I use `filter()` vs `subset()`?
+- What does it mean if I get `NaN` in `mean()` or `sd()`?
+
+---
+
+## End of Solution Guide
