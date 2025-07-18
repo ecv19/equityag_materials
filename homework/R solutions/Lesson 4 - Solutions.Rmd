@@ -1,0 +1,143 @@
+# Solution Guide: Lesson 3 — Variables, Transformations, and Robustness in Regression
+
+## ✅ Part 1: Understanding Variables
+
+### Example dummy variable creation:
+```r
+region <- factor(c("North", "South", "North", "South"))
+dummies <- model.matrix(~ region)[, -1]  # Dummy for "South"
+```
+
+### Ordinal variable caution:
+While `ordered()` preserves rank, treating education as numeric implies constant spacing — not always valid.
+
+### Likert-scale:
+```r
+likert <- ordered(c("Disagree", "Neutral", "Agree", "Strongly Agree"),
+                  levels = c("Strongly Disagree", "Disagree", "Neutral", "Agree", "Strongly Agree"))
+```
+
+### Continuous and Binary examples:
+```r
+income <- c(32000, 45000, 51000, 39000)
+employed <- c(1, 0, 1, 1)
+```
+
+---
+
+## ✅ Part 2: Distributions and Error Terms
+
+### Fit model and plot residuals:
+```r
+model <- lm(mpg ~ wt, data = mtcars)
+hist(residuals(model), breaks = 10, main = "Histogram of Residuals")
+```
+
+### Visualize standard errors:
+```r
+library(ggplot2)
+
+ggplot(mtcars, aes(x = wt, y = mpg)) +
+  geom_point() +
+  geom_smooth(method = "lm", se = TRUE)
+```
+
+### Compare OLS and median regression:
+```r
+ols_model <- lm(mpg ~ wt, data = mtcars)
+library(quantreg)
+median_model <- rq(mpg ~ wt, data = mtcars, tau = 0.5)
+```
+
+---
+
+## ✅ Part 3: Transforming Variables
+
+### Standardize example:
+```r
+df <- data.frame(
+  income = c(32000, 45000, 51000, 39000),
+  education_years = c(12, 16, 18, 14))
+
+df$income_std <- scale(df$income)
+df$education_std <- scale(df$education_years)
+```
+
+### Log transform population:
+```r
+population <- c(800, 1200, 50000, 600, 90000)
+log_pop <- log10(population)
+barplot(log_pop, names.arg = c("A", "B", "C", "D", "E"))
+```
+
+### Apply to `mtcars`:
+```r
+mtcars$wt_std <- scale(mtcars$wt)
+mtcars$log_wt <- log(mtcars$wt)
+mtcars$log_wt_safe <- log(mtcars$wt + 1)
+```
+
+---
+
+## ✅ Part 4: When OLS Isn’t Enough
+
+### Nonlinear fit:
+```r
+model_quad <- lm(mpg ~ wt + I(wt^2), data = mtcars)
+```
+
+### Check heteroskedasticity:
+```r
+plot(model$fitted.values, model$residuals)
+```
+
+### Robust SE:
+```r
+library(sandwich)
+library(lmtest)
+coeftest(model, vcov = vcovHC(model, type = "HC1"))
+```
+
+### Logistic regression:
+```r
+mtcars$high_mpg <- ifelse(mtcars$mpg > 20, 1, 0)
+logit_model <- glm(high_mpg ~ wt, data = mtcars, family = binomial)
+summary(logit_model)
+```
+
+---
+
+## ✅ Part 5: Robustness Checks
+
+### Try different model spec:
+```r
+model_alt <- lm(mpg ~ wt + hp, data = mtcars)
+```
+
+### Remove outlier:
+```r
+model_no_outlier <- lm(mpg ~ wt, data = mtcars[-which.max(mtcars$wt), ])
+```
+
+### Try different estimators:
+- `rq()` for quantile regression
+- `vcovHC()` for robust SE
+
+---
+
+## 💡 Practice Tasks
+
+1. Create different variable types with `factor()`, `ordered()`, `numeric()`
+2. Use `hist()`, `boxplot()` to visualize
+3. Use `log()` and `scale()` to transform
+4. Run `lm()` and add `I(x^2)` term
+5. Try `vcovHC()` and `rq()`
+6. Design your own robustness check
+
+---
+
+## 🔍 Reflect and Extend
+
+- How do assumptions shape your models?
+- What trade-offs exist between model simplicity and realism?
+- What other types of data might challenge OLS assumptions?
