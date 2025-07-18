@@ -6,21 +6,31 @@
 ```r
 region <- factor(c("North", "South", "North", "South"))
 dummies <- model.matrix(~ region)[, -1]  # Dummy for "South"
+dummies
 ```
 
 ### Ordinal variable caution:
-While `ordered()` preserves rank, treating education as numeric implies constant spacing — not always valid.
+```r
+education <- ordered(c("High school", "College", "Graduate"),
+                     levels = c("High school", "College", "Graduate"))
+education
+```
+
+Treating this as numeric might imply that the difference between each level is equal, which is not true.
 
 ### Likert-scale:
 ```r
 likert <- ordered(c("Disagree", "Neutral", "Agree", "Strongly Agree"),
                   levels = c("Strongly Disagree", "Disagree", "Neutral", "Agree", "Strongly Agree"))
+likert
 ```
 
 ### Continuous and Binary examples:
 ```r
 income <- c(32000, 45000, 51000, 39000)
 employed <- c(1, 0, 1, 1)
+income
+employed
 ```
 
 ---
@@ -45,8 +55,11 @@ ggplot(mtcars, aes(x = wt, y = mpg)) +
 ### Compare OLS and median regression:
 ```r
 ols_model <- lm(mpg ~ wt, data = mtcars)
+summary(ols_model)
+
 library(quantreg)
 median_model <- rq(mpg ~ wt, data = mtcars, tau = 0.5)
+summary(median_model)
 ```
 
 ---
@@ -61,6 +74,7 @@ df <- data.frame(
 
 df$income_std <- scale(df$income)
 df$education_std <- scale(df$education_years)
+df
 ```
 
 ### Log transform population:
@@ -75,6 +89,7 @@ barplot(log_pop, names.arg = c("A", "B", "C", "D", "E"))
 mtcars$wt_std <- scale(mtcars$wt)
 mtcars$log_wt <- log(mtcars$wt)
 mtcars$log_wt_safe <- log(mtcars$wt + 1)
+head(mtcars)
 ```
 
 ---
@@ -84,6 +99,7 @@ mtcars$log_wt_safe <- log(mtcars$wt + 1)
 ### Nonlinear fit:
 ```r
 model_quad <- lm(mpg ~ wt + I(wt^2), data = mtcars)
+summary(model_quad)
 ```
 
 ### Check heteroskedasticity:
@@ -112,32 +128,77 @@ summary(logit_model)
 ### Try different model spec:
 ```r
 model_alt <- lm(mpg ~ wt + hp, data = mtcars)
+summary(model_alt)
 ```
 
 ### Remove outlier:
 ```r
 model_no_outlier <- lm(mpg ~ wt, data = mtcars[-which.max(mtcars$wt), ])
+summary(model_no_outlier)
 ```
 
 ### Try different estimators:
-- `rq()` for quantile regression
-- `vcovHC()` for robust SE
+- Quantile regression: see `rq()` above
+- Robust SE: see `vcovHC()` above
 
 ---
 
-## 💡 Practice Tasks
+## 💡 Practice Tasks — Completed Examples
 
-1. Create different variable types with `factor()`, `ordered()`, `numeric()`
-2. Use `hist()`, `boxplot()` to visualize
-3. Use `log()` and `scale()` to transform
-4. Run `lm()` and add `I(x^2)` term
-5. Try `vcovHC()` and `rq()`
-6. Design your own robustness check
+### 1. Create different variable types
+```r
+region <- factor(c("East", "West", "East"))
+edu_level <- ordered(c("HS", "College", "Grad"), levels = c("HS", "College", "Grad"))
+income <- c(35000, 48000, 51000)
+```
+
+### 2. Visualize with hist/boxplot, mean vs median
+```r
+hist(mtcars$mpg)
+boxplot(mtcars$mpg)
+mean(mtcars$mpg)
+median(mtcars$mpg)
+```
+
+### 3. Apply `log()` and `scale()`
+```r
+log_hp <- log(mtcars$hp)
+scaled_hp <- scale(mtcars$hp)
+```
+
+### 4. Run `lm()` and add quadratic term
+```r
+model_basic <- lm(mpg ~ wt, data = mtcars)
+model_quad <- lm(mpg ~ wt + I(wt^2), data = mtcars)
+```
+
+### 5. Use `vcovHC()` and `rq()`
+```r
+coeftest(model_basic, vcov = vcovHC(model_basic, type = "HC1"))
+rq_model <- rq(mpg ~ wt, data = mtcars, tau = 0.5)
+summary(rq_model)
+```
+
+### 6. Design your own robustness check
+> Example: Try dropping all cars with more than 6 cylinders and re-run the model.
+```r
+model_small_engines <- lm(mpg ~ wt, data = subset(mtcars, cyl <= 6))
+summary(model_small_engines)
+```
 
 ---
 
-## 🔍 Reflect and Extend
+## 🔍 Reflect and Extend — Sample Responses
 
-- How do assumptions shape your models?
-- What trade-offs exist between model simplicity and realism?
-- What other types of data might challenge OLS assumptions?
+- **Why is it dangerous to treat all variables the same way?**
+  > Variables have different structures (e.g., continuous vs. ordinal). Treating all as numeric might mislead interpretation or violate model assumptions.
+
+- **What are the trade-offs between simplicity and complexity?**
+  > Simpler models are easier to explain and often generalize better. Complex models might capture patterns more accurately but can overfit or be hard to interpret.
+
+- **What other robustness checks could you imagine?**
+  > Split the data into training/testing subsets, use bootstrapping, or test results across multiple subsets (e.g., by gear type or transmission type).
+
+---
+
+This guide provides a full walkthrough for students completing Lesson 3 exercises. Let me know if you'd like a PDF or HTML version for distribution!
