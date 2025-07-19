@@ -1,4 +1,4 @@
-# Solution Guide: Lesson 3 — Variables, Transformations, and Robustness in Regression
+# Solution Guide: Lesson 4 — Variables, Transformations, and Robustness in Regression
 
 ## ✅ Part 1: Understanding Variables
 
@@ -8,6 +8,7 @@ region <- factor(c("North", "South", "North", "South"))
 dummies <- model.matrix(~ region)[, -1]  # Dummy for "South"
 dummies
 ```
+> This converts a categorical variable into a binary indicator (0/1), where "South" gets coded as 1.
 
 ### Ordinal variable caution:
 ```r
@@ -15,8 +16,7 @@ education <- ordered(c("High school", "College", "Graduate"),
                      levels = c("High school", "College", "Graduate"))
 education
 ```
-
-Treating this as numeric might imply that the difference between each level is equal, which is not true.
+> This shows how ordered factors maintain rank. However, assuming equal spacing between levels could mislead regression.
 
 ### Likert-scale:
 ```r
@@ -24,6 +24,7 @@ likert <- ordered(c("Disagree", "Neutral", "Agree", "Strongly Agree"),
                   levels = c("Strongly Disagree", "Disagree", "Neutral", "Agree", "Strongly Agree"))
 likert
 ```
+> A common survey format treated as numeric for convenience but should be interpreted carefully.
 
 ### Continuous and Binary examples:
 ```r
@@ -32,6 +33,7 @@ employed <- c(1, 0, 1, 1)
 income
 employed
 ```
+> Continuous variables represent scale values, while binary variables encode true/false or yes/no as 1 and 0.
 
 ---
 
@@ -42,6 +44,7 @@ employed
 model <- lm(mpg ~ wt, data = mtcars)
 hist(residuals(model), breaks = 10, main = "Histogram of Residuals")
 ```
+> This histogram helps visualize the distribution of errors. A bell shape indicates normally distributed residuals.
 
 ### Visualize standard errors:
 ```r
@@ -51,6 +54,7 @@ ggplot(mtcars, aes(x = wt, y = mpg)) +
   geom_point() +
   geom_smooth(method = "lm", se = TRUE)
 ```
+> The shaded area represents the 95% confidence interval around the regression line — based on standard errors.
 
 ### Compare OLS and median regression:
 ```r
@@ -61,6 +65,7 @@ library(quantreg)
 median_model <- rq(mpg ~ wt, data = mtcars, tau = 0.5)
 summary(median_model)
 ```
+> OLS minimizes mean squared error; quantile regression minimizes absolute deviations. Useful for skewed data.
 
 ---
 
@@ -76,6 +81,7 @@ df$income_std <- scale(df$income)
 df$education_std <- scale(df$education_years)
 df
 ```
+> Standardization puts different units on the same scale — helpful when variables have different magnitudes.
 
 ### Log transform population:
 ```r
@@ -83,6 +89,7 @@ population <- c(800, 1200, 50000, 600, 90000)
 log_pop <- log10(population)
 barplot(log_pop, names.arg = c("A", "B", "C", "D", "E"))
 ```
+> Without log, large values (like 90,000) would dominate the plot. This transformation compresses extreme values.
 
 ### Apply to `mtcars`:
 ```r
@@ -91,6 +98,7 @@ mtcars$log_wt <- log(mtcars$wt)
 mtcars$log_wt_safe <- log(mtcars$wt + 1)
 head(mtcars)
 ```
+> These are standard and log transformations of the car weight variable for analysis or regression.
 
 ---
 
@@ -101,11 +109,13 @@ head(mtcars)
 model_quad <- lm(mpg ~ wt + I(wt^2), data = mtcars)
 summary(model_quad)
 ```
+> Adds a squared term to capture curvature in the relationship between weight and mpg.
 
 ### Check heteroskedasticity:
 ```r
 plot(model$fitted.values, model$residuals)
 ```
+> If residuals fan out, error variance is not constant — violating OLS assumptions.
 
 ### Robust SE:
 ```r
@@ -113,6 +123,7 @@ library(sandwich)
 library(lmtest)
 coeftest(model, vcov = vcovHC(model, type = "HC1"))
 ```
+> Produces standard errors that are robust to heteroskedasticity — improving inference.
 
 ### Logistic regression:
 ```r
@@ -120,6 +131,7 @@ mtcars$high_mpg <- ifelse(mtcars$mpg > 20, 1, 0)
 logit_model <- glm(high_mpg ~ wt, data = mtcars, family = binomial)
 summary(logit_model)
 ```
+> Predicts the probability of high fuel efficiency using logistic regression (suitable for binary outcomes).
 
 ---
 
@@ -130,20 +142,18 @@ summary(logit_model)
 model_alt <- lm(mpg ~ wt + hp, data = mtcars)
 summary(model_alt)
 ```
+> Adds horsepower to the model to check if the relationship with mpg changes.
 
 ### Remove outlier:
 ```r
 model_no_outlier <- lm(mpg ~ wt, data = mtcars[-which.max(mtcars$wt), ])
 summary(model_no_outlier)
 ```
-
-### Try different estimators:
-- Quantile regression: see `rq()` above
-- Robust SE: see `vcovHC()` above
+> Removes the heaviest car. If coefficients change a lot, results are sensitive to that outlier.
 
 ---
 
-## 💡 Practice Tasks — Completed Examples
+## 💡 Practice Tasks — Completed Examples with Explanations
 
 ### 1. Create different variable types
 ```r
@@ -151,26 +161,34 @@ region <- factor(c("East", "West", "East"))
 edu_level <- ordered(c("HS", "College", "Grad"), levels = c("HS", "College", "Grad"))
 income <- c(35000, 48000, 51000)
 ```
+> This demonstrates how to store categorical, ordinal, and numeric variables.
 
 ### 2. Visualize with hist/boxplot, mean vs median
 ```r
-hist(mtcars$mpg)
-boxplot(mtcars$mpg)
+hist(mtcars$mpg, main = "Histogram of mpg", col = "skyblue")
+boxplot(mtcars$mpg, main = "Boxplot of mpg")
 mean(mtcars$mpg)
 median(mtcars$mpg)
 ```
+> Histograms show distribution shape, boxplots highlight outliers and spread. Mean vs. median shows central tendency.
 
 ### 3. Apply `log()` and `scale()`
 ```r
 log_hp <- log(mtcars$hp)
 scaled_hp <- scale(mtcars$hp)
+hist(log_hp, main = "Log-transformed HP")
+hist(scaled_hp, main = "Standardized HP")
 ```
+> Visualization confirms effects of transformation — reducing skew or centering.
 
 ### 4. Run `lm()` and add quadratic term
 ```r
 model_basic <- lm(mpg ~ wt, data = mtcars)
 model_quad <- lm(mpg ~ wt + I(wt^2), data = mtcars)
+summary(model_basic)
+summary(model_quad)
 ```
+> Compare R² and coefficients to see if the quadratic model fits better.
 
 ### 5. Use `vcovHC()` and `rq()`
 ```r
@@ -178,27 +196,24 @@ coeftest(model_basic, vcov = vcovHC(model_basic, type = "HC1"))
 rq_model <- rq(mpg ~ wt, data = mtcars, tau = 0.5)
 summary(rq_model)
 ```
+> Tests robustness of coefficient estimates — useful for skewed or noisy data.
 
 ### 6. Design your own robustness check
-> Example: Try dropping all cars with more than 6 cylinders and re-run the model.
 ```r
 model_small_engines <- lm(mpg ~ wt, data = subset(mtcars, cyl <= 6))
 summary(model_small_engines)
 ```
+> Shows what happens when excluding larger engine cars — a simple sensitivity analysis.
 
 ---
 
 ## 🔍 Reflect and Extend — Sample Responses
 
 - **Why is it dangerous to treat all variables the same way?**
-  > Variables have different structures (e.g., continuous vs. ordinal). Treating all as numeric might mislead interpretation or violate model assumptions.
+  > Because ordinal, categorical, and continuous variables have different properties and imply different meanings in models.
 
 - **What are the trade-offs between simplicity and complexity?**
-  > Simpler models are easier to explain and often generalize better. Complex models might capture patterns more accurately but can overfit or be hard to interpret.
+  > Simple models are interpretable and generalizable, while complex models can capture more nuanced patterns but may overfit.
 
 - **What other robustness checks could you imagine?**
-  > Split the data into training/testing subsets, use bootstrapping, or test results across multiple subsets (e.g., by gear type or transmission type).
-
----
-
-This guide provides a full walkthrough for students completing Lesson 3 exercises. Let me know if you'd like a PDF or HTML version for distribution!
+  > Run models across random subsamples, remove top/bottom quantiles, or check consistency across subsets like transmission type.

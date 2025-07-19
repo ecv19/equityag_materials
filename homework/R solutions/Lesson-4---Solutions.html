@@ -352,8 +352,8 @@ display: none;
 </div>
 
 
-<div id="solution-guide-lesson-3-variables-transformations-and-robustness-in-regression" class="section level1">
-<h1>Solution Guide: Lesson 3 — Variables, Transformations, and
+<div id="solution-guide-lesson-4-variables-transformations-and-robustness-in-regression" class="section level1">
+<h1>Solution Guide: Lesson 4 — Variables, Transformations, and
 Robustness in Regression</h1>
 <div id="part-1-understanding-variables" class="section level2">
 <h2>✅ Part 1: Understanding Variables</h2>
@@ -362,20 +362,30 @@ Robustness in Regression</h1>
 <pre class="r"><code>region &lt;- factor(c(&quot;North&quot;, &quot;South&quot;, &quot;North&quot;, &quot;South&quot;))
 dummies &lt;- model.matrix(~ region)[, -1]  # Dummy for &quot;South&quot;
 dummies</code></pre>
+<blockquote>
+<p>This converts a categorical variable into a binary indicator (0/1),
+where “South” gets coded as 1.</p>
+</blockquote>
 </div>
 <div id="ordinal-variable-caution" class="section level3">
 <h3>Ordinal variable caution:</h3>
 <pre class="r"><code>education &lt;- ordered(c(&quot;High school&quot;, &quot;College&quot;, &quot;Graduate&quot;),
                      levels = c(&quot;High school&quot;, &quot;College&quot;, &quot;Graduate&quot;))
 education</code></pre>
-<p>Treating this as numeric might imply that the difference between each
-level is equal, which is not true.</p>
+<blockquote>
+<p>This shows how ordered factors maintain rank. However, assuming equal
+spacing between levels could mislead regression.</p>
+</blockquote>
 </div>
 <div id="likert-scale" class="section level3">
 <h3>Likert-scale:</h3>
 <pre class="r"><code>likert &lt;- ordered(c(&quot;Disagree&quot;, &quot;Neutral&quot;, &quot;Agree&quot;, &quot;Strongly Agree&quot;),
                   levels = c(&quot;Strongly Disagree&quot;, &quot;Disagree&quot;, &quot;Neutral&quot;, &quot;Agree&quot;, &quot;Strongly Agree&quot;))
 likert</code></pre>
+<blockquote>
+<p>A common survey format treated as numeric for convenience but should
+be interpreted carefully.</p>
+</blockquote>
 </div>
 <div id="continuous-and-binary-examples" class="section level3">
 <h3>Continuous and Binary examples:</h3>
@@ -383,6 +393,10 @@ likert</code></pre>
 employed &lt;- c(1, 0, 1, 1)
 income
 employed</code></pre>
+<blockquote>
+<p>Continuous variables represent scale values, while binary variables
+encode true/false or yes/no as 1 and 0.</p>
+</blockquote>
 <hr />
 </div>
 </div>
@@ -392,6 +406,10 @@ employed</code></pre>
 <h3>Fit model and plot residuals:</h3>
 <pre class="r"><code>model &lt;- lm(mpg ~ wt, data = mtcars)
 hist(residuals(model), breaks = 10, main = &quot;Histogram of Residuals&quot;)</code></pre>
+<blockquote>
+<p>This histogram helps visualize the distribution of errors. A bell
+shape indicates normally distributed residuals.</p>
+</blockquote>
 </div>
 <div id="visualize-standard-errors" class="section level3">
 <h3>Visualize standard errors:</h3>
@@ -400,6 +418,10 @@ hist(residuals(model), breaks = 10, main = &quot;Histogram of Residuals&quot;)</
 ggplot(mtcars, aes(x = wt, y = mpg)) +
   geom_point() +
   geom_smooth(method = &quot;lm&quot;, se = TRUE)</code></pre>
+<blockquote>
+<p>The shaded area represents the 95% confidence interval around the
+regression line — based on standard errors.</p>
+</blockquote>
 </div>
 <div id="compare-ols-and-median-regression" class="section level3">
 <h3>Compare OLS and median regression:</h3>
@@ -409,6 +431,10 @@ summary(ols_model)
 library(quantreg)
 median_model &lt;- rq(mpg ~ wt, data = mtcars, tau = 0.5)
 summary(median_model)</code></pre>
+<blockquote>
+<p>OLS minimizes mean squared error; quantile regression minimizes
+absolute deviations. Useful for skewed data.</p>
+</blockquote>
 <hr />
 </div>
 </div>
@@ -423,12 +449,20 @@ summary(median_model)</code></pre>
 df$income_std &lt;- scale(df$income)
 df$education_std &lt;- scale(df$education_years)
 df</code></pre>
+<blockquote>
+<p>Standardization puts different units on the same scale — helpful when
+variables have different magnitudes.</p>
+</blockquote>
 </div>
 <div id="log-transform-population" class="section level3">
 <h3>Log transform population:</h3>
 <pre class="r"><code>population &lt;- c(800, 1200, 50000, 600, 90000)
 log_pop &lt;- log10(population)
 barplot(log_pop, names.arg = c(&quot;A&quot;, &quot;B&quot;, &quot;C&quot;, &quot;D&quot;, &quot;E&quot;))</code></pre>
+<blockquote>
+<p>Without log, large values (like 90,000) would dominate the plot. This
+transformation compresses extreme values.</p>
+</blockquote>
 </div>
 <div id="apply-to-mtcars" class="section level3">
 <h3>Apply to <code>mtcars</code>:</h3>
@@ -436,6 +470,10 @@ barplot(log_pop, names.arg = c(&quot;A&quot;, &quot;B&quot;, &quot;C&quot;, &quo
 mtcars$log_wt &lt;- log(mtcars$wt)
 mtcars$log_wt_safe &lt;- log(mtcars$wt + 1)
 head(mtcars)</code></pre>
+<blockquote>
+<p>These are standard and log transformations of the car weight variable
+for analysis or regression.</p>
+</blockquote>
 <hr />
 </div>
 </div>
@@ -445,22 +483,38 @@ head(mtcars)</code></pre>
 <h3>Nonlinear fit:</h3>
 <pre class="r"><code>model_quad &lt;- lm(mpg ~ wt + I(wt^2), data = mtcars)
 summary(model_quad)</code></pre>
+<blockquote>
+<p>Adds a squared term to capture curvature in the relationship between
+weight and mpg.</p>
+</blockquote>
 </div>
 <div id="check-heteroskedasticity" class="section level3">
 <h3>Check heteroskedasticity:</h3>
 <pre class="r"><code>plot(model$fitted.values, model$residuals)</code></pre>
+<blockquote>
+<p>If residuals fan out, error variance is not constant — violating OLS
+assumptions.</p>
+</blockquote>
 </div>
 <div id="robust-se" class="section level3">
 <h3>Robust SE:</h3>
 <pre class="r"><code>library(sandwich)
 library(lmtest)
 coeftest(model, vcov = vcovHC(model, type = &quot;HC1&quot;))</code></pre>
+<blockquote>
+<p>Produces standard errors that are robust to heteroskedasticity —
+improving inference.</p>
+</blockquote>
 </div>
 <div id="logistic-regression" class="section level3">
 <h3>Logistic regression:</h3>
 <pre class="r"><code>mtcars$high_mpg &lt;- ifelse(mtcars$mpg &gt; 20, 1, 0)
 logit_model &lt;- glm(high_mpg ~ wt, data = mtcars, family = binomial)
 summary(logit_model)</code></pre>
+<blockquote>
+<p>Predicts the probability of high fuel efficiency using logistic
+regression (suitable for binary outcomes).</p>
+</blockquote>
 <hr />
 </div>
 </div>
@@ -470,60 +524,85 @@ summary(logit_model)</code></pre>
 <h3>Try different model spec:</h3>
 <pre class="r"><code>model_alt &lt;- lm(mpg ~ wt + hp, data = mtcars)
 summary(model_alt)</code></pre>
+<blockquote>
+<p>Adds horsepower to the model to check if the relationship with mpg
+changes.</p>
+</blockquote>
 </div>
 <div id="remove-outlier" class="section level3">
 <h3>Remove outlier:</h3>
 <pre class="r"><code>model_no_outlier &lt;- lm(mpg ~ wt, data = mtcars[-which.max(mtcars$wt), ])
 summary(model_no_outlier)</code></pre>
-</div>
-<div id="try-different-estimators" class="section level3">
-<h3>Try different estimators:</h3>
-<ul>
-<li>Quantile regression: see <code>rq()</code> above</li>
-<li>Robust SE: see <code>vcovHC()</code> above</li>
-</ul>
+<blockquote>
+<p>Removes the heaviest car. If coefficients change a lot, results are
+sensitive to that outlier.</p>
+</blockquote>
 <hr />
 </div>
 </div>
-<div id="practice-tasks-completed-examples" class="section level2">
-<h2>💡 Practice Tasks — Completed Examples</h2>
+<div id="practice-tasks-completed-examples-with-explanations" class="section level2">
+<h2>💡 Practice Tasks — Completed Examples with Explanations</h2>
 <div id="create-different-variable-types" class="section level3">
 <h3>1. Create different variable types</h3>
 <pre class="r"><code>region &lt;- factor(c(&quot;East&quot;, &quot;West&quot;, &quot;East&quot;))
 edu_level &lt;- ordered(c(&quot;HS&quot;, &quot;College&quot;, &quot;Grad&quot;), levels = c(&quot;HS&quot;, &quot;College&quot;, &quot;Grad&quot;))
 income &lt;- c(35000, 48000, 51000)</code></pre>
+<blockquote>
+<p>This demonstrates how to store categorical, ordinal, and numeric
+variables.</p>
+</blockquote>
 </div>
 <div id="visualize-with-histboxplot-mean-vs-median" class="section level3">
 <h3>2. Visualize with hist/boxplot, mean vs median</h3>
-<pre class="r"><code>hist(mtcars$mpg)
-boxplot(mtcars$mpg)
+<pre class="r"><code>hist(mtcars$mpg, main = &quot;Histogram of mpg&quot;, col = &quot;skyblue&quot;)
+boxplot(mtcars$mpg, main = &quot;Boxplot of mpg&quot;)
 mean(mtcars$mpg)
 median(mtcars$mpg)</code></pre>
+<blockquote>
+<p>Histograms show distribution shape, boxplots highlight outliers and
+spread. Mean vs. median shows central tendency.</p>
+</blockquote>
 </div>
 <div id="apply-log-and-scale" class="section level3">
 <h3>3. Apply <code>log()</code> and <code>scale()</code></h3>
 <pre class="r"><code>log_hp &lt;- log(mtcars$hp)
-scaled_hp &lt;- scale(mtcars$hp)</code></pre>
+scaled_hp &lt;- scale(mtcars$hp)
+hist(log_hp, main = &quot;Log-transformed HP&quot;)
+hist(scaled_hp, main = &quot;Standardized HP&quot;)</code></pre>
+<blockquote>
+<p>Visualization confirms effects of transformation — reducing skew or
+centering.</p>
+</blockquote>
 </div>
 <div id="run-lm-and-add-quadratic-term" class="section level3">
 <h3>4. Run <code>lm()</code> and add quadratic term</h3>
 <pre class="r"><code>model_basic &lt;- lm(mpg ~ wt, data = mtcars)
-model_quad &lt;- lm(mpg ~ wt + I(wt^2), data = mtcars)</code></pre>
+model_quad &lt;- lm(mpg ~ wt + I(wt^2), data = mtcars)
+summary(model_basic)
+summary(model_quad)</code></pre>
+<blockquote>
+<p>Compare R² and coefficients to see if the quadratic model fits
+better.</p>
+</blockquote>
 </div>
 <div id="use-vcovhc-and-rq" class="section level3">
 <h3>5. Use <code>vcovHC()</code> and <code>rq()</code></h3>
 <pre class="r"><code>coeftest(model_basic, vcov = vcovHC(model_basic, type = &quot;HC1&quot;))
 rq_model &lt;- rq(mpg ~ wt, data = mtcars, tau = 0.5)
 summary(rq_model)</code></pre>
+<blockquote>
+<p>Tests robustness of coefficient estimates — useful for skewed or
+noisy data.</p>
+</blockquote>
 </div>
 <div id="design-your-own-robustness-check" class="section level3">
 <h3>6. Design your own robustness check</h3>
-<blockquote>
-<p>Example: Try dropping all cars with more than 6 cylinders and re-run
-the model.</p>
-</blockquote>
 <pre class="r"><code>model_small_engines &lt;- lm(mpg ~ wt, data = subset(mtcars, cyl &lt;= 6))
 summary(model_small_engines)</code></pre>
+<blockquote>
+<p>Shows what happens when excluding larger engine cars — a simple
+sensitivity analysis.</p>
+</blockquote>
 <hr />
 </div>
 </div>
@@ -531,22 +610,17 @@ summary(model_small_engines)</code></pre>
 <h2>🔍 Reflect and Extend — Sample Responses</h2>
 <ul>
 <li><p><strong>Why is it dangerous to treat all variables the same
-way?</strong> &gt; Variables have different structures (e.g., continuous
-vs. ordinal). Treating all as numeric might mislead interpretation or
-violate model assumptions.</p></li>
+way?</strong> &gt; Because ordinal, categorical, and continuous
+variables have different properties and imply different meanings in
+models.</p></li>
 <li><p><strong>What are the trade-offs between simplicity and
-complexity?</strong> &gt; Simpler models are easier to explain and often
-generalize better. Complex models might capture patterns more accurately
-but can overfit or be hard to interpret.</p></li>
+complexity?</strong> &gt; Simple models are interpretable and
+generalizable, while complex models can capture more nuanced patterns
+but may overfit.</p></li>
 <li><p><strong>What other robustness checks could you imagine?</strong>
-&gt; Split the data into training/testing subsets, use bootstrapping, or
-test results across multiple subsets (e.g., by gear type or transmission
-type).</p></li>
+&gt; Run models across random subsamples, remove top/bottom quantiles,
+or check consistency across subsets like transmission type.</p></li>
 </ul>
-<hr />
-<p>This guide provides a full walkthrough for students completing Lesson
-3 exercises. Let me know if you’d like a PDF or HTML version for
-distribution!</p>
 </div>
 </div>
 
