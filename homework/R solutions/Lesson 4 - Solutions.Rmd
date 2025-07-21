@@ -1,3 +1,8 @@
+---
+title: "Lesson 4 Solution Guide"
+output: html_document
+---
+
 # Solution Guide: Lesson 4 — Variables, Transformations, and Robustness in Regression
 
 ## ✅ Part 1: Understanding Variables
